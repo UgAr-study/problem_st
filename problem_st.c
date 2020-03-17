@@ -64,8 +64,10 @@ struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top)
         multy->right = multy->right->left;
         tmp->left = multy;
 
-        if (*ptr_top == NULL)
+        if (*ptr_top == NULL) {
             *ptr_top = tmp;
+            printf("change top\n");
+        }
     }
 
     return multy;
@@ -74,15 +76,21 @@ struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top)
 struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) {
     assert (ptr_top != NULL);
 
-    struct node_t *expression, *tmp;
+    struct node_t *expression, *tmp, *e_left;
     if (i == lexarr.size)
         return NULL;
 
     expression = (struct node_t*) calloc (1, sizeof (struct node_t));
     //expression->left = numb (lexarr, i);
-    mult (lexarr, &i, &expression->left);
-    //++i;
+    printf ("bef mul\n");
+    e_left = mult (lexarr, &i, &expression->left);
 
+    printf ("e->l = %p\te_l = %p\n", expression->left, e_left);
+    if (expression->left == NULL && e_left != NULL)
+        expression->left = e_left;
+    //++i;
+    printf ("after mul\n");
+    //assert (i <= lexarr.size);
     if (i == lexarr.size)
         return expression->left;
 
@@ -110,13 +118,17 @@ struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) 
 }
 
 struct node_t* build_syntax_tree(struct lex_array_t lexarr) {
-    struct node_t* tree = NULL;
-    expr (lexarr, 0, &tree);
+    struct node_t* tree = NULL, *e;
+    e = expr (lexarr, 0, &tree);
+    assert (e != NULL);
+    if (tree == NULL)
+        tree = e;
     return tree;
 }
 
 int calc_result(struct node_t *top) { // 22 - 3 + 5 - 6 ответ 20, а верный 18!
     int result, l, r;
+    assert (top != NULL);
     //left
     //right
     //visit
