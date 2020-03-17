@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "../problem_lx/problem_lx.h"
 
 // lexem is operation | brace | number
@@ -60,3 +61,7 @@ void print_lexem(struct lexem_t lxm);
 //void dump_lexarray(struct lex_array_t pl);
 
 
+//print tree
+void print_tree (struct node_t* top);
+//print node
+void print_node (struct lexem_t lex);

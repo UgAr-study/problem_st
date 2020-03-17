@@ -42,14 +42,17 @@ struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top)
 
     multy = (struct node_t*) calloc (1, sizeof (struct node_t));
     multy->left = numb (lexarr, *i);
+
     *i = *i + 1;
 
     if (*i == lexarr.size)
         return multy->left;
+
     if (lexarr.lexems[*i].kind != OP){
         printf ("Wrong format\n");
         exit (4);
     }
+
     if ((lexarr.lexems[*i].lex.op != MUL) && (lexarr.lexems[*i].lex.op != DIV))
         return multy->left;
 
@@ -64,10 +67,8 @@ struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top)
         multy->right = multy->right->left;
         tmp->left = multy;
 
-        if (*ptr_top == NULL) {
+        if (*ptr_top == NULL)
             *ptr_top = tmp;
-            printf("change top\n");
-        }
     }
 
     return multy;
@@ -76,21 +77,17 @@ struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top)
 struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) {
     assert (ptr_top != NULL);
 
-    struct node_t *expression, *tmp, *e_left;
+    struct node_t *expression, *tmp, *e_left, *e_right;
     if (i == lexarr.size)
         return NULL;
 
     expression = (struct node_t*) calloc (1, sizeof (struct node_t));
-    //expression->left = numb (lexarr, i);
-    printf ("bef mul\n");
+
     e_left = mult (lexarr, &i, &expression->left);
 
-    printf ("e->l = %p\te_l = %p\n", expression->left, e_left);
     if (expression->left == NULL && e_left != NULL)
         expression->left = e_left;
-    //++i;
-    printf ("after mul\n");
-    //assert (i <= lexarr.size);
+
     if (i == lexarr.size)
         return expression->left;
 
@@ -101,11 +98,16 @@ struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) 
 
     expression->lex = lexarr.lexems[i];
     ++i;
+
     assert(i != lexarr.size);
 
     expression->right = expr (lexarr, i, ptr_top);
+    /*e_right = expr (lexarr, i, &expression->right);
 
-    if (expression->right->left != NULL) {
+    if (expression->right == NULL && e_right != NULL)
+        expression->right = e_right;*/
+
+    if (expression->right->left != NULL && abs(expression->lex.lex.num - expression->right->lex.lex.num) <= 1) {
         tmp = expression->right;
         expression->right = expression->right->left;
         tmp->left = expression;
@@ -140,21 +142,80 @@ int calc_result(struct node_t *top) { // 22 - 3 + 5 - 6 ответ 20, а вер
     switch (top->lex.lex.op) {
         case ADD:
             result = l + r;
+            printf ("%d + %d   ", l, r);
             break;
         case SUB:
             result = l - r;
+            printf ("%d - %d   ", l, r);
             break;
         case MUL:
             result = l * r;
+            printf ("%d * %d   ", l, r);
             break;
         case DIV:
             result = l / r;
+            printf ("%d / %d   ", l, r);
             break;
         default:
             printf ("Operation is not found, sorry (\n");
             exit (3);
     }
     return result;
+}
+
+void print_node (struct lexem_t lex) {
+    switch (lex.kind) {
+        case OP:
+            switch (lex.lex.op) {
+                case ADD:
+                    printf ("ADD ");
+                    break;
+                case SUB:
+                    printf ("SUB ");
+                    break;
+                case MUL:
+                    printf ("MUL ");
+                    break;
+                case DIV:
+                    printf ("DIV ");
+                    break;
+                default:
+                    exit(1);
+            }
+            break;
+        case NUM:
+            printf ("%d ", lex.lex.num);
+            break;
+        default:
+            exit(2);
+    }
+}
+
+void print_tree (struct node_t* top) {
+    if (top == NULL){
+        printf ("Error: top is NULL\n");
+        return;
+    }
+    if (top->left == NULL && top->right == NULL)
+        return;
+
+    print_node (top->lex);
+
+    if (top->left == NULL) {
+        printf ("\n");
+        return;
+    }
+    print_node (top->left->lex);
+
+    if (top->right == NULL)
+        return;
+    print_node (top->right->lex);
+
+    printf ("\n");
+
+    print_tree (top->left);
+    print_tree (top->right);
+    return;
 }
 
 void free_syntax_tree(struct node_t * top) {

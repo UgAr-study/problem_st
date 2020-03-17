@@ -29,6 +29,9 @@ int main() {
     }
 
     top = build_syntax_tree (larr);
+    print_tree (top);
+    printf ("\n");
+
     printf ("result is: %d\n", calc_result(top));
     dump_lexarray(larr);
 
