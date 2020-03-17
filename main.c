@@ -27,7 +27,7 @@ int main() {
         printf("ERROR\n");
         return 0;
     }
-
+    printf ("beg\n");
     top = build_syntax_tree (larr);
     printf ("result is: %d\n", calc_result(top));
     dump_lexarray(larr);

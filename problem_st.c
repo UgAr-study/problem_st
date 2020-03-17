@@ -1,4 +1,5 @@
 #include "problem_st.h"
+#include "../problem_lx/problem_lx.h"
 
 // Grammar:
 // expr ::= mult {+, -} expr | mult
@@ -34,16 +35,40 @@ struct node_t* numb (struct lex_array_t lexarr, int i) {
     return num;
 }
 
-struct node_t* mult (struct lex_array_t lexarr, int *i) {
-    struct node_t *mult;
+struct node_t* mult (struct lex_array_t lexarr, int *i, struct node_t** ptr_top) {
+    assert(ptr_top != NULL);
 
-    mult = (struct node_t*) calloc (1, sizeof (struct node_t));
-    mult->left = numb (lexarr, *i);
+    struct node_t *multy, *tmp;
+
+    multy = (struct node_t*) calloc (1, sizeof (struct node_t));
+    multy->left = numb (lexarr, *i);
     *i = *i + 1;
 
     if (*i == lexarr.size)
-        return mult->left;
-    if ()
+        return multy->left;
+    if (lexarr.lexems[*i].kind != OP){
+        printf ("Wrong format\n");
+        exit (4);
+    }
+    if ((lexarr.lexems[*i].lex.op != MUL) && (lexarr.lexems[*i].lex.op != DIV))
+        return multy->left;
+
+    multy->lex = lexarr.lexems[*i];
+
+    *i = *i + 1;
+    assert(*i != lexarr.size);
+    multy->right = mult(lexarr, i, ptr_top);
+
+    if (multy->right->left != NULL) {
+        tmp = multy->right;
+        multy->right = multy->right->left;
+        tmp->left = multy;
+
+        if (*ptr_top == NULL)
+            *ptr_top = tmp;
+    }
+
+    return multy;
 }
 
 struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) {
@@ -54,7 +79,8 @@ struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) 
         return NULL;
 
     expression = (struct node_t*) calloc (1, sizeof (struct node_t));
-    expression->left = numb (lexarr, i);
+    //expression->left = numb (lexarr, i);
+    mult (lexarr, &i, &expression->left);
     //++i;
 
     if (i == lexarr.size)
@@ -67,6 +93,7 @@ struct node_t* expr (struct lex_array_t lexarr, int i, struct node_t** ptr_top) 
 
     expression->lex = lexarr.lexems[i];
     ++i;
+    assert(i != lexarr.size);
 
     expression->right = expr (lexarr, i, ptr_top);
 
