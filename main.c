@@ -19,7 +19,10 @@ int main() {
     char inp[MAXLEN] = {0};
 
     res = scanf("%1023c", inp);
-    assert(res == 1);
+    if (res != 1) {
+        printf ("ERROR: file is empty\n");
+        exit (1);
+    }
 
     larr = lex_string(inp);
 
@@ -35,6 +38,7 @@ int main() {
     printf ("result is: %d\n", calc_result(top));
     dump_lexarray(larr);
 
+    free_syntax_tree (top);
     free(larr.lexems);
     return 0;
 }
