@@ -70,6 +70,7 @@ struct node_t* mult (struct lex_array_t lexarr, int *i) {
                 multy->left = m_left;
                 (*i)++;
                 multy->right = mult(lexarr, i);
+                (*i)++;
                 return multy;
             }
             (*i)++;
