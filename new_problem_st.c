@@ -65,17 +65,15 @@ struct node_t* mult (struct lex_array_t lexarr, int *i) {
         (*i)++;
         if (lexarr.lexems[*i].kind == OP) {
             if (lexarr.lexems[*i].lex.op == MUL || lexarr.lexems[*i].lex.op == DIV) {
-                multy = (struct node_t *) calloc(1, sizeof(struct node_t));
+                multy = (struct node_t *) calloc (1, sizeof(struct node_t));
                 multy->lex.lex = lexarr.lexems[*i].lex;
                 multy->left = m_left;
                 (*i)++;
                 multy->right = mult(lexarr, i);
-                (*i)++;
                 return multy;
             }
-            (*i)++;
+            (*i)--;
         }
-        (*i)--;
     }
 
     return m_left;
@@ -91,6 +89,7 @@ struct node_t* expr (struct lex_array_t lexarr, int *i) {
     e_left = mult(lexarr, i);
     printf ("E: i = %d\n", *i);
     if (*i != lexarr.size) {
+        (*i)++;
         if (lexarr.lexems[*i].kind == OP) {
             if (lexarr.lexems[*i].lex.op == ADD || lexarr.lexems[*i].lex.op == SUB) {
                 expression = (struct node_t *) calloc(1, sizeof(struct node_t));
@@ -98,9 +97,9 @@ struct node_t* expr (struct lex_array_t lexarr, int *i) {
                 expression->left = e_left;
                 (*i)++;
                 expression->right = expr(lexarr, i);
-                (*i)++;
                 return expression;
             }
+            (*i)--;
         }
     }
 
