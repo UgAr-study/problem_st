@@ -1,16 +1,5 @@
-#include "C:\clineProjects\hw_prog\problem_lx\problem_lx.h"
-#include "problem_st.h"
-
-int test_dump() {
-    struct lexem_t lxs[5] = {
-            {BRACE, .lex.b = LBRAC}, {NUM, .lex.num = 2}, {OP, MUL}, {NUM, .lex.num = 2}, {BRACE, .lex.b = RBRAC}
-    };
-
-    struct lex_array_t larr = {lxs, 5, 5};
-    dump_lexarray(larr);
-    //printf ("\ntest_dump has successfully finished\n\n");
-    return 1;
-}
+#include "..\problem_lx\problem_lx.h"
+#include "new_pr_st.h"
 
 int main() {
     int res;
@@ -21,22 +10,14 @@ int main() {
     res = scanf("%1023c", inp);
     if (res != 1) {
         printf ("ERROR: file is empty\n");
-        exit (1);
+        exit (0);
     }
 
-    larr = lex_string(inp);
-
-    if (larr.lexems == NULL) {
-        printf("ERROR\n");
-        return 0;
-    }
-
-    top = build_syntax_tree (larr);
+    top = build_syntax_tree_(inp);
     print_tree (top);
-    printf ("\n");
 
-    printf ("result is: %d\n", calc_result(top));
-    dump_lexarray(larr);
+    printf ("\nresult is: %d\n", calc_result(top));
+
 
     free_syntax_tree (top);
     free(larr.lexems);

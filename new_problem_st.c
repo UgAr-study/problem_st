@@ -1,119 +1,121 @@
-#include "../problem_st/problem_st.h"
+#include "new_pr_st.h"
 
 // Grammar:
 // expr ::= mult {+, -} expr | mult
 // mult ::= term {*, /} mult | term
 // term ::= ( expr ) | number
 
-struct node_t* expr (struct lex_array_t lexarr, int* i);
-
-struct node_t* return_left (struct node_t* top) {
-    struct node_t* left = top->left;
-    free (top);
-    return left;
-}
+struct node_t* expr (const char* str, int* i);
 
 struct node_t *create (struct lexem_t lex) {
     struct node_t* res;
     res = (struct node_t*) calloc (1, sizeof (struct node_t));
+    if (res == NULL) {
+        printf ("ERROR: calloc() couldn't provide memory\n");
+        exit(0);
+    }
     res->lex = lex;
     return res;
 }
 
-struct node_t* numb (struct lex_array_t lexarr, int i) {
-    printf ("in numb\n");
-    struct node_t* num;
-    if (lexarr.lexems[i].kind != NUM){
-        printf ("N: Wrong format\n");
-        exit(1);
-    }
-    num = create(lexarr.lexems[i]);
-    return num;
-}
-
-struct node_t* term (struct lex_array_t lexarr, int *i) {
+struct node_t* term (const char* str, int *i) {
+#ifdef VISUALIZE
     printf("in term\n");
+#endif
+    struct node_t* term = NULL;
+    struct lexem_t cur_lex;
 
-    if (lexarr.lexems[*i].kind == NUM)
-        return numb(lexarr, *i);
+    cur_lex = get_cur_lexem(str, i);
+    if (cur_lex.kind == END)
+        return term;
 
-    if (lexarr.lexems[*i].kind == BRACE) {
-        if (lexarr.lexems[*i].lex.b == LBRAC) {
-            *i = *i + 1;
-            return expr (lexarr, i);
+    if (cur_lex.kind == NUM) {
+        term = create(cur_lex);
+        return term;
+    }
+
+    if (is_left_brace(cur_lex, *i) == 1) {
+        (*i)++;
+        term = expr (str, i);
+        (*i)++;
+        cur_lex = get_cur_lexem(str, i);
+        if (is_right_brace(cur_lex) == 0) {
+            printf("ERROR: expected ')' on %d position", *i);
+            exit(0);
         }
-        if (lexarr.lexems[*i].lex.b == RBRAC) {
-            printf("RBRACE\n");
-            *i = *i + 1;
-            return NULL;
-        }
+        return term;
     } else {
         printf ("Wrong format: expected number or brace on %d position\n", *i + 1);
         exit (1);
     }
-    return NULL;
 }
 
-struct node_t* mult (struct lex_array_t lexarr, int *i) {
+struct node_t* mult (const char* str, int *i) {
+#ifdef VISUALIZE
     printf ("in mult\n");
+#endif
+
     struct node_t *multy, *m_left;
+    struct lexem_t cur_lex;
 
+    m_left = term (str, i);
 
-    m_left = term (lexarr, i);
+#ifdef VISUALIZE
     printf ("M: i = %d\n", *i);
-    if (*i != lexarr.size) {
+#endif
+
+    if (m_left != NULL) {
         (*i)++;
-        if (lexarr.lexems[*i].kind == OP) {
-            if (lexarr.lexems[*i].lex.op == MUL || lexarr.lexems[*i].lex.op == DIV) {
-                multy = (struct node_t *) calloc (1, sizeof(struct node_t));
-                multy->lex.lex = lexarr.lexems[*i].lex;
-                multy->left = m_left;
-                (*i)++;
-                multy->right = mult(lexarr, i);
-                return multy;
-            }
-            (*i)--;
+        cur_lex = get_cur_lexem(str, i);
+        if (is_mul_div(cur_lex, i) == 1) {
+            multy = create(cur_lex);
+            multy->left = m_left;
+            (*i)++;
+            multy->right = mult(str, i);
+            return multy;
         }
     }
 
     return m_left;
 }
 
-struct node_t* expr (struct lex_array_t lexarr, int *i) {
+struct node_t* expr (const char* str, int *i) {
+#ifdef VISUALIZE
     printf ("in expr\n");
+#endif
 
     struct node_t *expression, *e_left;
-    if (*i == lexarr.size)
-        return NULL;
+    struct lexem_t cur_lex;
 
-    e_left = mult(lexarr, i);
+    e_left = mult(str, i);
+
+#ifdef VISUALIZE
     printf ("E: i = %d\n", *i);
-    if (*i != lexarr.size) {
+#endif
+
+    if (e_left != NULL) {
         (*i)++;
-        if (lexarr.lexems[*i].kind == OP) {
-            if (lexarr.lexems[*i].lex.op == ADD || lexarr.lexems[*i].lex.op == SUB) {
-                expression = (struct node_t *) calloc(1, sizeof(struct node_t));
-                expression->lex.lex = lexarr.lexems[*i].lex;
-                expression->left = e_left;
-                (*i)++;
-                expression->right = expr(lexarr, i);
-                return expression;
-            }
-            (*i)--;
+        cur_lex = get_cur_lexem(str, i);
+        if (is_add_sub(cur_lex, i) == 1) {
+            expression = create (cur_lex);
+            expression->left = e_left;
+            (*i)++;
+            expression->right = expr(str, i);
+            return expression;
         }
     }
 
     return e_left;
 }
 
-struct node_t* build_syntax_tree(struct lex_array_t lexarr) {
+struct node_t* build_syntax_tree_(const char* str) {
     struct node_t* tree;
     int i = 0;
-    tree = expr (lexarr, &i);
+    tree = expr (str, &i);
 
     if (tree == NULL) {
         printf ("Nothing to be calculated\n");
-        exit (1);
+        exit (0);
     }
 
     return tree;
