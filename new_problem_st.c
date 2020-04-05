@@ -67,12 +67,21 @@ struct node_t* mult (const char* str, int *i) {
     if (m_left != NULL) {
         (*i)++;
         cur_lex = get_cur_lexem(str, i);
-        if (is_mul_div(cur_lex, i) == 1) {
+
+        while (is_mul_div(cur_lex, i) == 1) {
             multy = create(cur_lex);
             multy->left = m_left;
             (*i)++;
-            multy->right = mult(str, i);
-            return multy;
+            multy->right = term (str, i);
+
+            if (multy->right == NULL) {
+                printf ("Wrong format: expected a number or expression on %d position", *i);
+                exit(0);
+            }
+
+            m_left = multy;
+            (*i)++;
+            cur_lex = get_cur_lexem(str, i);
         }
     }
 
@@ -96,12 +105,21 @@ struct node_t* expr (const char* str, int *i) {
     if (e_left != NULL) {
         (*i)++;
         cur_lex = get_cur_lexem(str, i);
-        if (is_add_sub(cur_lex, i) == 1) {
-            expression = create (cur_lex);
+
+        while (is_add_sub(cur_lex, i) == 1) {
+            expression = create(cur_lex);
             expression->left = e_left;
             (*i)++;
-            expression->right = expr(str, i);
-            return expression;
+            expression->right = mult (str, i);
+
+            if (expression->right == NULL) {
+                printf ("Wrong format: expected a number or expression on %d position", *i);
+                exit(0);
+            }
+
+            e_left = expression;
+            (*i)++;
+            cur_lex = get_cur_lexem(str, i);
         }
     }
 
